@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Track and explore updates, prices, stock levels, and historical magazine issues from Vince Aletti's landmark book 'Issues: A History of Photography in Fashion Magazines'.">
+    <title>Issues: Vince Aletti Book Tracker & Explorer</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <!-- Background Accents -->
+    <div class="bg-blur blur-1"></div>
+    <div class="bg-blur blur-2"></div>
+
+    <div class="app-container">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="logo-area">
+                <span class="logo-tag">Phaidon Survey</span>
+                <h1 id="main-title">Issues by Vince Aletti</h1>
+            </div>
+            <div class="action-area">
+                <span class="source-indicator" id="data-source">Loading source...</span>
+                <button id="btn-refresh" class="btn btn-primary" aria-label="Refresh book details">
+                    <span class="btn-text">Refresh Details</span>
+                    <i class="fa-solid fa-rotate-right btn-icon"></i>
+                    <div class="spinner" id="refresh-spinner" style="display: none;"></div>
+                </button>
+            </div>
+        </header>
+
+        <!-- Main Layout -->
+        <main class="dashboard-grid">
+            <!-- Left Panel: Book Overview -->
+            <section class="panel book-panel" id="book-overview-panel">
+                <div class="book-card-skeleton" id="book-skeleton">
+                    <div class="skeleton skeleton-img"></div>
+                    <div class="skeleton skeleton-title"></div>
+                    <div class="skeleton skeleton-text"></div>
+                    <div class="skeleton skeleton-text"></div>
+                </div>
+                
+                <div class="book-card-content" id="book-content" style="display: none;">
+                    <div class="book-cover-wrapper">
+                        <img id="book-cover" src="" alt="Book Cover" class="book-cover">
+                        <div class="book-badge" id="stock-badge">In Stock</div>
+                    </div>
+                    
+                    <div class="book-meta">
+                        <h2 class="book-title" id="book-title-disp">Issues</h2>
+                        <p class="book-author">By <span id="book-author-disp">Vince Aletti</span></p>
+                        
+                        <div class="rating-container">
+                            <div class="stars" id="book-rating-stars">
+                                <i class="fa-solid fa-star"></i>
+                                <i class="fa-solid fa-star"></i>
+                                <i class="fa-solid fa-star"></i>
+                                <i class="fa-solid fa-star"></i>
+                                <i class="fa-solid fa-star-half-stroke"></i>
+                            </div>
+                            <span class="rating-text" id="book-rating-text">4.7 (87 reviews)</span>
+                        </div>
+
+                        <div class="price-container">
+                            <span class="current-price" id="book-price-curr">$71.95</span>
+                            <span class="list-price" id="book-price-list">$79.95</span>
+                            <span class="discount-badge" id="book-discount">-10%</span>
+                        </div>
+
+                        <div class="info-list">
+                            <div class="info-item">
+                                <span class="info-label">Publisher</span>
+                                <span class="info-val" id="book-publisher">Phaidon Press</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Published</span>
+                                <span class="info-val" id="book-pub-date">May 8, 2019</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">ISBN-13</span>
+                                <span class="info-val" id="book-isbn">978-0714876788</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Pages</span>
+                                <span class="info-val" id="book-pages">272</span>
+                            </div>
+                        </div>
+
+                        <div class="book-description">
+                            <h3>Overview</h3>
+                            <p id="book-description-text"></p>
+                        </div>
+
+                        <a href="https://www.amazon.com/dp/0714876789" target="_blank" class="btn btn-secondary btn-store-link" id="btn-amazon-store">
+                            View on Amazon Store <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                        </a>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Right Panel: Tabs for Issues and Store Alerts -->
+            <section class="panel details-panel">
+                <div class="tabs-header">
+                    <button class="tab-btn active" id="tab-issues" data-tab="issues-content" aria-selected="true" role="tab">
+                        <i class="fa-solid fa-images"></i> Featured Issues <span class="badge" id="badge-issues-count">0</span>
+                    </button>
+                    <button class="tab-btn" id="tab-updates" data-tab="updates-content" aria-selected="false" role="tab">
+                        <i class="fa-solid fa-bell"></i> Store Alerts <span class="badge" id="badge-updates-count">0</span>
+                    </button>
+                </div>
+
+                <!-- Tab Content: Issues List -->
+                <div class="tab-pane active" id="issues-content" role="tabpanel">
+                    <div class="filter-bar">
+                        <div class="search-box">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                            <input type="text" id="issues-search" placeholder="Search by magazine, photographer, cover star...">
+                        </div>
+                        <div class="category-filters" id="category-filters-container">
+                            <button class="filter-tag active" data-filter="all">All</button>
+                            <button class="filter-tag" data-filter="Classic Era">Classic</button>
+                            <button class="filter-tag" data-filter="Golden Era">Golden</button>
+                            <button class="filter-tag" data-filter="Avant-Garde Era">Avant-Garde</button>
+                            <button class="filter-tag" data-filter="Indie & Zines">Indie</button>
+                            <button class="filter-tag" data-filter="Modern Era">Modern</button>
+                        </div>
+                    </div>
+
+                    <div class="issues-grid" id="issues-grid-container">
+                        <!-- Populated dynamically -->
+                    </div>
+                </div>
+
+                <!-- Tab Content: Store Alerts Feed -->
+                <div class="tab-pane" id="updates-content" role="tabpanel">
+                    <div class="alerts-feed" id="alerts-feed-container">
+                        <!-- Populated dynamically -->
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Email Modal (Success & Simulation Console) -->
+    <div class="modal-overlay" id="email-modal" style="display: none;">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3 id="modal-title">Email Notification Status</h3>
+                <button class="close-btn" id="btn-close-modal" aria-label="Close modal"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="status-banner success-banner" id="email-success-banner">
+                    <i class="fa-solid fa-circle-check status-icon"></i>
+                    <div>
+                        <h4 id="email-status-heading">Email Sent Successfully!</h4>
+                        <p id="email-status-message">The update details have been sent to your inbox.</p>
+                    </div>
+                </div>
+                
+                <div class="simulation-alert" id="email-sim-alert" style="display: none;">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                    <span><strong>Simulation Mode:</strong> SMTP credentials are not configured in your .env file. Showing email preview below.</span>
+                </div>
+
+                <div class="email-preview-client">
+                    <div class="client-header">
+                        <div class="client-row">
+                            <span class="label">To:</span>
+                            <span class="value" id="email-preview-to">elena.dobrovolskaia.sqa@gmail.com</span>
+                        </div>
+                        <div class="client-row">
+                            <span class="label">Subject:</span>
+                            <span class="value" id="email-preview-subject">[Issues Book Update] ...</span>
+                        </div>
+                        <div class="client-row" id="client-smtp-row" style="display: none;">
+                            <span class="label">Server:</span>
+                            <span class="value" id="email-preview-smtp">smtp.gmail.com:587</span>
+                        </div>
+                    </div>
+                    <div class="client-body" id="email-preview-body">
+                        <!-- Populated dynamically -->
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" id="btn-modal-ok">Got it</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification System -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <!-- Custom JS -->
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>
