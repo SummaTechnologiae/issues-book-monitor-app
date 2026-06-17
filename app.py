@@ -4,10 +4,11 @@ import logging
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
-from flask import Flask, render_template, jsonify, request
+from flask import Flask, render_template, jsonify, request, render_template_string
 import requests
 from bs4 import BeautifulSoup
 from dotenv import load_dotenv
+import json
 
 # Load environment variables from .env file
 load_dotenv()
@@ -310,6 +311,68 @@ def get_book_details():
         
     return jsonify(data)
 
+def send_email_message(recipient, subject, html_body, text_body):
+    smtp_server = os.getenv('SMTP_SERVER', 'smtp.gmail.com')
+    smtp_port = int(os.getenv('SMTP_PORT', '587'))
+    smtp_user = os.getenv('SMTP_USERNAME', '')
+    smtp_pass = os.getenv('SMTP_PASSWORD', '')
+    sender = os.getenv('SENDER_EMAIL', 'noreply@issues-tracker.com')
+
+    if not smtp_user or not smtp_pass:
+        logger.info("SMTP Credentials not configured. Simulating email sending.")
+        logger.info(f"SIMULATED EMAIL TO: {recipient}")
+        logger.info(f"SUBJECT: {subject}")
+        logger.info(f"TEXT BODY:\n{text_body}")
+        
+        return {
+            "status": "simulated",
+            "message": "Email sending simulated successfully. To send real emails, configure the SMTP credentials in your .env file.",
+            "recipient": recipient,
+            "subject": subject,
+            "email_body": html_body,
+            "smtp_server": smtp_server,
+            "smtp_port": smtp_port
+        }
+
+    try:
+        logger.info(f"Attempting to send real email to {recipient} via {smtp_server}:{smtp_port}")
+        
+        msg = MIMEMultipart('alternative')
+        msg['Subject'] = subject
+        msg['From'] = sender
+        msg['To'] = recipient
+        
+        part1 = MIMEText(text_body, 'plain')
+        part2 = MIMEText(html_body, 'html')
+        msg.attach(part1)
+        msg.attach(part2)
+        
+        # Connect and Send
+        server = smtplib.SMTP(smtp_server, smtp_port)
+        server.starttls()
+        server.login(smtp_user, smtp_pass)
+        server.sendmail(sender, [recipient], msg.as_string())
+        server.quit()
+        
+        logger.info(f"Email successfully sent to {recipient}")
+        return {
+            "status": "success",
+            "message": f"Email successfully sent to {recipient}!",
+            "recipient": recipient,
+            "subject": subject
+        }
+        
+    except Exception as e:
+        logger.error(f"Failed to send email via SMTP: {str(e)}")
+        return {
+            "status": "error",
+            "message": f"SMTP Error: {str(e)}. Falling back to simulation.",
+            "recipient": recipient,
+            "subject": subject,
+            "email_body": html_body,
+            "error_details": str(e)
+        }
+
 @app.route('/api/send-email', methods=['POST'])
 def send_email():
     """
@@ -324,13 +387,6 @@ def send_email():
     details = post_data.get('details', 'No details provided.')
     recipient = os.getenv('RECIPIENT_EMAIL', 'elena.dobrovolskaia.sqa@gmail.com')
     
-    # SMTP Config from environment
-    smtp_server = os.getenv('SMTP_SERVER', 'smtp.gmail.com')
-    smtp_port = int(os.getenv('SMTP_PORT', '587'))
-    smtp_user = os.getenv('SMTP_USERNAME', '')
-    smtp_pass = os.getenv('SMTP_PASSWORD', '')
-    sender = os.getenv('SENDER_EMAIL', 'noreply@issues-tracker.com')
-
     subject = f"[Issues Book Update] {update_type}: {title}"
     
     # Build HTML and Text body
@@ -371,62 +427,157 @@ def send_email():
     Recipient: {recipient}
     """
 
-    # If credentials are not set, we simulate sending and return a successful simulated response
-    if not smtp_user or not smtp_pass:
-        logger.info("SMTP Credentials not configured. Simulating email sending.")
-        logger.info(f"SIMULATED EMAIL TO: {recipient}")
-        logger.info(f"SUBJECT: {subject}")
-        logger.info(f"TEXT BODY:\n{text_body}")
-        
-        return jsonify({
-            "status": "simulated",
-            "message": "Email sending simulated successfully. To send real emails, configure the SMTP credentials in your .env file.",
-            "recipient": recipient,
-            "subject": subject,
-            "email_body": html_body,
-            "smtp_server": smtp_server,
-            "smtp_port": smtp_port
-        })
+    res = send_email_message(recipient, subject, html_body, text_body)
+    if res.get("status") == "error":
+        return jsonify(res), 500
+    return jsonify(res)
 
-    # If credentials are set, attempt to send real email
+SUBSCRIBERS_FILE = 'data/subscribers.json'
+
+def get_subscribers():
+    if not os.path.exists(os.path.dirname(SUBSCRIBERS_FILE)):
+        os.makedirs(os.path.dirname(SUBSCRIBERS_FILE), exist_ok=True)
+    if not os.path.exists(SUBSCRIBERS_FILE):
+        with open(SUBSCRIBERS_FILE, 'w') as f:
+            json.dump([], f)
+        return []
     try:
-        logger.info(f"Attempting to send real email to {recipient} via {smtp_server}:{smtp_port}")
-        
-        msg = MIMEMultipart('alternative')
-        msg['Subject'] = subject
-        msg['From'] = sender
-        msg['To'] = recipient
-        
-        part1 = MIMEText(text_body, 'plain')
-        part2 = MIMEText(html_body, 'html')
-        msg.attach(part1)
-        msg.attach(part2)
-        
-        # Connect and Send
-        server = smtplib.SMTP(smtp_server, smtp_port)
-        server.starttls()
-        server.login(smtp_user, smtp_pass)
-        server.sendmail(sender, [recipient], msg.as_string())
-        server.quit()
-        
-        logger.info(f"Email successfully sent to {recipient}")
-        return jsonify({
-            "status": "success",
-            "message": f"Email successfully sent to {recipient}!",
-            "recipient": recipient,
-            "subject": subject
-        })
-        
+        with open(SUBSCRIBERS_FILE, 'r') as f:
+            return json.load(f)
     except Exception as e:
-        logger.error(f"Failed to send email via SMTP: {str(e)}")
-        return jsonify({
-            "status": "error",
-            "message": f"SMTP Error: {str(e)}. Falling back to simulation.",
-            "recipient": recipient,
-            "subject": subject,
-            "email_body": html_body,
-            "error_details": str(e)
-        }), 500
+        logger.error(f"Error loading subscribers: {str(e)}")
+        return []
+
+def save_subscribers(subs):
+    if not os.path.exists(os.path.dirname(SUBSCRIBERS_FILE)):
+        os.makedirs(os.path.dirname(SUBSCRIBERS_FILE), exist_ok=True)
+    try:
+        with open(SUBSCRIBERS_FILE, 'w') as f:
+            json.dump(subs, f, indent=4)
+        return True
+    except Exception as e:
+        logger.error(f"Error saving subscribers: {str(e)}")
+        return False
+
+@app.route('/api/subscribe', methods=['POST'])
+def subscribe():
+    post_data = request.json or {}
+    email = post_data.get('email', '').strip().lower()
+    
+    if not email or '@' not in email:
+        return jsonify({"status": "error", "message": "Please enter a valid email address."}), 400
+        
+    subs = get_subscribers()
+    if any(s['email'] == email for s in subs):
+        return jsonify({"status": "already_subscribed", "message": f"{email} is already subscribed!"})
+        
+    import datetime
+    subs.append({
+        "email": email,
+        "subscribed_at": datetime.datetime.now().isoformat()
+    })
+    save_subscribers(subs)
+    
+    host_url = request.host_url.rstrip('/')
+    unsubscribe_url = f"{host_url}/unsubscribe?email={email}"
+    
+    subject = "[Issues Book Tracker] Subscription Confirmed"
+    html_body = f"""
+    <html>
+        <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 8px;">
+            <h2 style="color: #6366f1; border-bottom: 2px solid #6366f1; padding-bottom: 10px; margin-top: 0;">
+                Subscription Confirmed!
+            </h2>
+            <p>Hello,</p>
+            <p>You have successfully subscribed to updates for Vince Aletti's <strong>"Issues: A History of Photography in Fashion Magazines"</strong> book tracker.</p>
+            <p>You will now receive alerts regarding price drops, stock updates, and other changes directly to your inbox.</p>
+            
+            <div style="margin: 30px 0; text-align: center;">
+                <a href="{unsubscribe_url}" style="background-color: #f43f5e; color: white; padding: 10px 20px; text-decoration: none; border-radius: 4px; font-weight: bold; display: inline-block;">
+                    Unsubscribe from Updates
+                </a>
+            </div>
+            
+            <p style="font-size: 14px; color: #64748b; margin-top: 30px; border-top: 1px solid #e2e8f0; padding-top: 15px;">
+                If you did not request this subscription, please ignore this email or click unsubscribe above.
+                <br>Unsubscribe Link: <a href="{unsubscribe_url}">{unsubscribe_url}</a>
+            </p>
+        </body>
+    </html>
+    """
+    
+    text_body = f"""
+    Subscription Confirmed!
+    --------------------------------------------
+    Hello,
+    
+    You have successfully subscribed to updates for Vince Aletti's "Issues: A History of Photography in Fashion Magazines" book tracker.
+    
+    To unsubscribe, click the link below:
+    {unsubscribe_url}
+    
+    --------------------------------------------
+    Sent from the Issues by Vince Aletti Book Tracker.
+    """
+    
+    res = send_email_message(email, subject, html_body, text_body)
+    if res.get("status") == "error":
+        res["status_code"] = 500
+    else:
+        res["status_code"] = 200
+    return jsonify(res)
+
+@app.route('/unsubscribe', methods=['GET'])
+def unsubscribe():
+    email = request.args.get('email', '').strip().lower()
+    if not email:
+        return render_template_string("""
+        <html>
+            <body style="font-family: sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; background: #08070b; color: white; margin: 0;">
+                <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); padding: 2.5rem; border-radius: 16px; text-align: center; max-width: 400px;">
+                    <h1 style="color: #f43f5e; margin-bottom: 1rem;">Error</h1>
+                    <p style="color: #94a3b8;">No email address provided.</p>
+                </div>
+            </body>
+        </html>
+        """)
+        
+    subs = get_subscribers()
+    new_subs = [s for s in subs if s['email'] != email]
+    
+    if len(new_subs) == len(subs):
+        return render_template_string("""
+        <html>
+            <body style="font-family: sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; background: #08070b; color: white; margin: 0;">
+                <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); padding: 2.5rem; border-radius: 16px; text-align: center; max-width: 400px;">
+                    <h1 style="color: #f59e0b; margin-bottom: 1rem;">Not Found</h1>
+                    <p style="color: #94a3b8;">Email address <strong>{{ email }}</strong> was not found in our subscription list.</p>
+                </div>
+            </body>
+        </html>
+        """, email=email)
+        
+    save_subscribers(new_subs)
+    
+    return render_template_string("""
+    <html>
+        <head>
+            <title>Unsubscribed Successfully</title>
+            <style>
+                body { font-family: sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; background: #08070b; color: white; margin: 0; }
+                .card { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); padding: 2.5rem; border-radius: 16px; text-align: center; max-width: 400px; box-shadow: 0 8px 32px rgba(0,0,0,0.5); }
+                h1 { color: #f43f5e; margin-bottom: 1rem; }
+                p { color: #94a3b8; font-size: 0.95rem; line-height: 1.5; }
+            </style>
+        </head>
+        <body>
+            <div class="card">
+                <h1>Unsubscribed</h1>
+                <p>You have been successfully unsubscribed from the Vince Aletti book tracker updates. You will no longer receive emails for <strong>{{ email }}</strong>.</p>
+            </div>
+        </body>
+    </html>
+    """, email=email)
 
 if __name__ == '__main__':
     # Default to port 5000

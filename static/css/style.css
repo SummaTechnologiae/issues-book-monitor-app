@@ -1283,3 +1283,55 @@ body.light-theme .toast {
     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
 }
 
+/* Subscribe Section Styling */
+.subscribe-section {
+    margin-top: 1.75rem;
+    border-top: 1px solid var(--card-border);
+    padding-top: 1.5rem;
+}
+
+.subscribe-section h3 {
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--primary);
+    margin-bottom: 0.75rem;
+    font-weight: 700;
+}
+
+.subscribe-input-group {
+    display: flex;
+    gap: 0.5rem;
+    width: 100%;
+}
+
+.subscribe-input-group input {
+    flex-grow: 1;
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid var(--card-border);
+    border-radius: var(--radius-sm);
+    color: var(--text-primary);
+    padding: 0.6rem 0.8rem;
+    font-family: var(--font-sans);
+    font-size: 0.88rem;
+    transition: var(--transition-fast);
+}
+
+.subscribe-input-group input:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(129, 140, 248, 0.15);
+}
+
+.subscribe-input-group button {
+    white-space: nowrap;
+}
+
+/* Light Theme Subscribe Section Overrides */
+body.light-theme .subscribe-input-group input {
+    background: #ffffff;
+    color: #0f172a;
+    border-color: rgba(15, 23, 42, 0.12);
+}
+
+

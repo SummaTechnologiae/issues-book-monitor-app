@@ -585,4 +585,73 @@ document.addEventListener('DOMContentLoaded', () => {
         document.body.removeChild(link);
         showToast(`Exported ${filteredIssues.length} issues to CSV!`, 'success');
     });
+
+    // Subscription Logic
+    const subscribeForm = document.getElementById('subscribe-form');
+    const subscribeEmail = document.getElementById('subscribe-email');
+    const btnSubscribe = document.getElementById('btn-subscribe');
+
+    subscribeForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const email = subscribeEmail.value.trim();
+        if (!email) return;
+
+        btnSubscribe.disabled = true;
+        showToast('Subscribing...', 'info');
+
+        try {
+            const response = await fetch('/api/subscribe', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ email })
+            });
+
+            const result = await response.json();
+
+            if (!response.ok) {
+                throw new Error(result.message || 'Subscription failed.');
+            }
+
+            if (result.status === 'already_subscribed') {
+                showToast(result.message, 'info');
+                subscribeEmail.value = '';
+                return;
+            }
+
+            // If simulated, open the preview modal
+            if (result.status === 'simulated' || result.status === 'error') {
+                emailPreviewTo.textContent = result.recipient;
+                emailPreviewSubject.textContent = result.subject;
+                emailPreviewBody.innerHTML = result.email_body;
+
+                emailSimAlert.style.display = 'flex';
+                emailSuccessBanner.classList.remove('success-banner');
+                emailSuccessBanner.style.background = 'rgba(245, 158, 11, 0.08)';
+                emailSuccessBanner.style.borderColor = 'rgba(245, 158, 11, 0.2)';
+                emailSuccessBanner.querySelector('.status-icon').className = 'fa-solid fa-circle-info status-icon';
+                emailSuccessBanner.querySelector('.status-icon').style.color = 'var(--warning)';
+
+                emailStatusHeading.textContent = 'Confirmation Email (Simulated)';
+                emailStatusMessage.textContent = 'Subscription added to DB! Showing confirmation email preview below.';
+
+                clientSmtpRow.style.display = 'flex';
+                emailPreviewSmtp.textContent = `${result.smtp_server}:${result.smtp_port}`;
+
+                emailModal.style.display = 'flex';
+                showToast('Subscribed! Confirmation preview generated.', 'success');
+            } else {
+                showToast(`Subscribed successfully! Confirmation email sent to ${email}.`, 'success');
+            }
+
+            subscribeEmail.value = '';
+        } catch (error) {
+            console.error('Subscription error:', error);
+            showToast(`Error: ${error.message}`, 'error');
+        } finally {
+            btnSubscribe.disabled = false;
+        }
+    });
 });
+
