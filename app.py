@@ -437,31 +437,37 @@ def send_email():
         return jsonify(res), 500
     return jsonify(res)
 
+SUBSCRIBERS_MEM_DB = []
 SUBSCRIBERS_FILE = 'data/subscribers.json'
 
 def get_subscribers():
-    if not os.path.exists(os.path.dirname(SUBSCRIBERS_FILE)):
-        os.makedirs(os.path.dirname(SUBSCRIBERS_FILE), exist_ok=True)
-    if not os.path.exists(SUBSCRIBERS_FILE):
-        with open(SUBSCRIBERS_FILE, 'w') as f:
-            json.dump([], f)
-        return []
+    global SUBSCRIBERS_MEM_DB
     try:
+        if not os.path.exists(os.path.dirname(SUBSCRIBERS_FILE)):
+            os.makedirs(os.path.dirname(SUBSCRIBERS_FILE), exist_ok=True)
+        if not os.path.exists(SUBSCRIBERS_FILE):
+            with open(SUBSCRIBERS_FILE, 'w') as f:
+                json.dump([], f)
+            return SUBSCRIBERS_MEM_DB
         with open(SUBSCRIBERS_FILE, 'r') as f:
-            return json.load(f)
+            data = json.load(f)
+            SUBSCRIBERS_MEM_DB = data
+            return data
     except Exception as e:
         logger.error(f"Error loading subscribers: {str(e)}")
-        return []
+        return SUBSCRIBERS_MEM_DB
 
 def save_subscribers(subs):
-    if not os.path.exists(os.path.dirname(SUBSCRIBERS_FILE)):
-        os.makedirs(os.path.dirname(SUBSCRIBERS_FILE), exist_ok=True)
+    global SUBSCRIBERS_MEM_DB
+    SUBSCRIBERS_MEM_DB = subs
     try:
+        if not os.path.exists(os.path.dirname(SUBSCRIBERS_FILE)):
+            os.makedirs(os.path.dirname(SUBSCRIBERS_FILE), exist_ok=True)
         with open(SUBSCRIBERS_FILE, 'w') as f:
             json.dump(subs, f, indent=4)
         return True
     except Exception as e:
-        logger.error(f"Error saving subscribers: {str(e)}")
+        logger.error(f"Error saving subscribers to file: {str(e)}. Saved in memory.")
         return False
 
 @app.route('/api/subscribe', methods=['POST'])
@@ -528,8 +534,8 @@ def subscribe():
     res = send_email_message(email, subject, html_body, text_body)
     if res.get("status") == "error":
         res["status_code"] = 500
-    else:
-        res["status_code"] = 200
+        return jsonify(res), 500
+    res["status_code"] = 200
     return jsonify(res)
 
 @app.route('/unsubscribe', methods=['GET'])
