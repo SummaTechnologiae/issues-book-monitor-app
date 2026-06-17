@@ -1,5 +1,7 @@
 # Issues by Vince Aletti - Book Tracker & Explorer
 
+**Live Application:** [https://issues-book-monitor.onrender.com](https://issues-book-monitor.onrender.com)
+
 A beautiful web application built with **Python Flask** and **plain vanilla HTML, CSS, and JavaScript** that fetches details of Vince Aletti's landmark book *Issues: A History of Photography in Fashion Magazines* from the Amazon Store. 
 
 It allows you to explore the 100 historical fashion magazine issues selected in the book and send selected store updates, price changes, or magazine details directly to your email (`elena.dobrovolskaia.sqa@gmail.com`).
