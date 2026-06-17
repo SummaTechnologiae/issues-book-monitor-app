@@ -314,7 +314,11 @@ def get_book_details():
 
 def send_email_message(recipient, subject, html_body, text_body):
     smtp_server = os.getenv('SMTP_SERVER', 'smtp.gmail.com')
-    smtp_port = int(os.getenv('SMTP_PORT', '587'))
+    smtp_port_str = os.getenv('SMTP_PORT', '587')
+    try:
+        smtp_port = int(smtp_port_str) if smtp_port_str else 587
+    except ValueError:
+        smtp_port = 587
     smtp_user = os.getenv('SMTP_USERNAME', '')
     smtp_pass = os.getenv('SMTP_PASSWORD', '')
     sender = os.getenv('SENDER_EMAIL', 'noreply@issues-tracker.com')

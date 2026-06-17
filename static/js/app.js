@@ -608,11 +608,23 @@ document.addEventListener('DOMContentLoaded', () => {
                 body: JSON.stringify({ email })
             });
 
-            const result = await response.json();
-
             if (!response.ok) {
-                throw new Error(result.message || 'Subscription failed.');
+                let errorMsg = 'Subscription failed.';
+                try {
+                    const errorJson = await response.json();
+                    errorMsg = errorJson.message || errorMsg;
+                } catch (e) {
+                    try {
+                        const errorText = await response.text();
+                        errorMsg = errorText.slice(0, 100) || errorMsg;
+                    } catch (textErr) {
+                        errorMsg = response.statusText || errorMsg;
+                    }
+                }
+                throw new Error(errorMsg);
             }
+
+            const result = await response.json();
 
             if (result.status === 'already_subscribed') {
                 showToast(result.message, 'info');
