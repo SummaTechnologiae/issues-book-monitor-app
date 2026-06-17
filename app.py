@@ -26,28 +26,29 @@ BOOK_FALLBACK_DATA = {
     "author": "Vince Aletti",
     "publisher": "Phaidon Press",
     "publication_date": "May 8, 2019",
-    "isbn_10": "0714876789",
+    "isbn_10": "071487678X",
     "isbn_13": "978-0714876788",
-    "pages": 272,
-    "dimensions": "9.4 x 1.2 x 11.2 inches",
+    "pages": 468,
+    "dimensions": "10.1 x 1.4 x 12.8 inches",
     "language": "English",
-    "list_price": "$79.95",
-    "current_price": "$71.95",
-    "discount": "10%",
+    "list_price": "$95.00",
+    "current_price": "$79.95",
+    "discount": "16%",
     "in_stock": True,
     "stock_status": "In Stock. Ships from and sold by Amazon.com.",
-    "rating": "4.7 out of 5 stars",
-    "reviews_count": 87,
+    "rating": "4.8 out of 5 stars",
+    "reviews_count": 124,
     "cover_image_url": "/static/images/book_cover.jpg", # High-quality cover image
     "amazon_store_url": "https://www.amazon.com/amz-books/store",
-    "amazon_product_url": "https://www.amazon.com/dp/0714876789",
+    "amazon_product_url": "https://www.amazon.com/Issues-History-Photography-Fashion-Magazines/dp/071487678X",
     "description": (
-        "Issues: A History of Photography in Fashion Magazines is the first book to gather "
-        "and explore the history of fashion photography through the medium of the magazine page. "
-        "Acclaimed photography critic Vince Aletti selects 100 significant magazine issues from "
-        "his personal archive, spanning 1925 to 2018. The book showcases how photographers "
-        "like Richard Avedon, Irving Penn, Cecil Beaton, Helmut Newton, and Wolfgang Tillmans "
-        "used the fashion magazine as their primary laboratory."
+        "Issues: A History of Photography in Fashion Magazines is the first book to showcase "
+        "and critically explore the groundbreaking photography featured in fashion magazines "
+        "over the last century. Acclaimed photography critic Vince Aletti selects 100 significant "
+        "magazine issues from his expansive personal archive, spanning 1925 to 2018. The book "
+        "showcases how photographers like Richard Avedon, Irving Penn, Cecil Beaton, Helmut Newton, "
+        "and Wolfgang Tillmans used the fashion magazine as their primary laboratory, presenting "
+        "the work in its original editorial context."
     ),
     # The "Issues" (Chronological selections from Vince Aletti's personal archive)
     "magazine_issues": [
@@ -204,7 +205,7 @@ def scrape_amazon_book_details():
     Attempts to scrape details of the Vince Aletti 'Issues' book from Amazon.
     Uses headers to avoid bot detection. Falls back to pre-defined rich data if blocked.
     """
-    url = "https://www.amazon.com/dp/0714876789"
+    url = "https://www.amazon.com/Issues-History-Photography-Fashion-Magazines/dp/071487678X"
     headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36',
         'Accept-Language': 'en-US,en;q=0.9',
