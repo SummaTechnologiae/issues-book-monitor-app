@@ -375,7 +375,9 @@ def send_email_message(recipient, subject, html_body, text_body):
             "recipient": recipient,
             "subject": subject,
             "email_body": html_body,
-            "error_details": str(e)
+            "error_details": str(e),
+            "smtp_server": smtp_server,
+            "smtp_port": smtp_port
         }
 
 @app.route('/api/send-email', methods=['POST'])
@@ -433,8 +435,7 @@ def send_email():
     """
 
     res = send_email_message(recipient, subject, html_body, text_body)
-    if res.get("status") == "error":
-        return jsonify(res), 500
+    # Even if SMTP fails, return 200 so the client can display the preview modal fallback
     return jsonify(res)
 
 SUBSCRIBERS_MEM_DB = []
@@ -532,9 +533,8 @@ def subscribe():
     """
     
     res = send_email_message(email, subject, html_body, text_body)
-    if res.get("status") == "error":
-        res["status_code"] = 500
-        return jsonify(res), 500
+    # If SMTP fails, the subscription itself was still successful (saved to DB).
+    # Return 200 so the frontend can display the simulated confirmation email preview fallback.
     res["status_code"] = 200
     return jsonify(res)
 

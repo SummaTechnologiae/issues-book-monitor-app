@@ -645,14 +645,23 @@ document.addEventListener('DOMContentLoaded', () => {
                 emailSuccessBanner.querySelector('.status-icon').className = 'fa-solid fa-circle-info status-icon';
                 emailSuccessBanner.querySelector('.status-icon').style.color = 'var(--warning)';
 
-                emailStatusHeading.textContent = 'Confirmation Email (Simulated)';
-                emailStatusMessage.textContent = 'Subscription added to DB! Showing confirmation email preview below.';
+                if (result.status === 'error') {
+                    emailStatusHeading.textContent = 'Confirmation Email (SMTP Failed)';
+                    emailStatusMessage.textContent = `Subscription added to DB! ${result.message}`;
+                } else {
+                    emailStatusHeading.textContent = 'Confirmation Email (Simulated)';
+                    emailStatusMessage.textContent = 'Subscription added to DB! Showing confirmation email preview below.';
+                }
 
                 clientSmtpRow.style.display = 'flex';
                 emailPreviewSmtp.textContent = `${result.smtp_server}:${result.smtp_port}`;
 
                 emailModal.style.display = 'flex';
-                showToast('Subscribed! Confirmation preview generated.', 'success');
+                if (result.status === 'error') {
+                    showToast('Subscribed! (SMTP configuration error, preview generated)', 'info');
+                } else {
+                    showToast('Subscribed! Confirmation preview generated.', 'success');
+                }
             } else {
                 showToast(`Subscribed successfully! Confirmation email sent to ${email}.`, 'success');
             }

@@ -1021,12 +1021,17 @@ body {
     border-left: 4px solid var(--accent);
 }
 
+.toast.toast-info {
+    border-left: 4px solid var(--primary);
+}
+
 .toast i {
     font-size: 1.1rem;
 }
 
 .toast-success i { color: var(--success); }
 .toast-error i { color: var(--accent); }
+.toast-info i { color: var(--primary); }
 
 /* ==========================================================================
    Skeletons & Shimmer Animations
