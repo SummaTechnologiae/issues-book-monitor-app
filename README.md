@@ -52,21 +52,6 @@ It allows you to explore the 100 historical fashion magazine issues selected in 
    pip install -r requirements.txt
    ```
 
-4. **Configure SMTP Email Settings (Optional)**:
-   By default, the application runs in **Simulation Mode** where you can click to "Email" any update and view a preview of the email client showing the subject, body, and warnings.
-   
-   To enable real email dispatch, copy `.env.example` to `.env` (or open the existing `.env` file) and fill in your details:
-   ```env
-   # Email Configuration (SMTP)
-   SMTP_SERVER=smtp.gmail.com
-   SMTP_PORT=587
-   SMTP_USERNAME=your_gmail_address@gmail.com
-   SMTP_PASSWORD=your_gmail_app_password
-   SENDER_EMAIL=your_gmail_address@gmail.com
-   RECIPIENT_EMAIL=your_email@example.com
-   ```
-   *Note: For Gmail, you will need to generate an **App Password** from your Google account settings.*
-
 ---
 
 ## Running the Application
