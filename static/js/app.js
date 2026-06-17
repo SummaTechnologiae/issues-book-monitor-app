@@ -281,9 +281,14 @@ document.addEventListener('DOMContentLoaded', () => {
                         <div class="issue-photographer">
                             Featured: <strong>${issue.cover_star}</strong>
                         </div>
-                        <button class="btn btn-secondary btn-icon-only btn-email-issue" data-id="${issue.id}" title="Email details about this issue">
-                            <i class="fa-solid fa-envelope"></i>
-                        </button>
+                        <div class="card-action-btns">
+                            <button class="btn btn-secondary btn-icon-only btn-copy-issue" data-id="${issue.id}" title="Copy details to clipboard">
+                                <i class="fa-solid fa-copy"></i>
+                            </button>
+                            <button class="btn btn-secondary btn-icon-only btn-email-issue" data-id="${issue.id}" title="Email details about this issue">
+                                <i class="fa-solid fa-envelope"></i>
+                            </button>
+                        </div>
                     </div>
                 </div>
             `;
@@ -302,6 +307,24 @@ document.addEventListener('DOMContentLoaded', () => {
                         type: `Magazine Issue Highlight (${issue.magazine})`,
                         title: `${issue.magazine} - ${issue.date} (Cover by ${issue.photographer})`,
                         details: `Featured Category: ${issue.category}\nCover Star: ${issue.cover_star}\n\nSignificance: ${issue.significance}\n\nVince Aletti Commentary:\n"${issue.commentary}"`
+                    });
+                }
+            });
+        });
+
+        // Set up copy buttons event listeners
+        document.querySelectorAll('.btn-copy-issue').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const issueId = btn.getAttribute('data-id');
+                const issue = bookData.magazine_issues.find(item => item.id === issueId);
+                if (issue) {
+                    const textToCopy = `Magazine: ${issue.magazine} (${issue.date})\nCover By: ${issue.photographer}\nFeatured: ${issue.cover_star}\nCategory: ${issue.category}\nSignificance: ${issue.significance}\nCommentary: ${issue.commentary}`;
+                    navigator.clipboard.writeText(textToCopy).then(() => {
+                        showToast(`Copied ${issue.magazine} details to clipboard!`, 'success');
+                    }).catch(err => {
+                        console.error('Failed to copy text: ', err);
+                        showToast('Failed to copy to clipboard', 'error');
                     });
                 }
             });
@@ -488,4 +511,78 @@ document.addEventListener('DOMContentLoaded', () => {
             setTimeout(() => toast.remove(), 300);
         }, 4000);
     }
+
+    // Theme Toggle Logic
+    const themeToggle = document.getElementById('theme-toggle');
+    if (localStorage.getItem('theme') === 'light') {
+        document.body.classList.add('light-theme');
+        themeToggle.checked = true;
+    }
+    
+    themeToggle.addEventListener('change', () => {
+        if (themeToggle.checked) {
+            document.body.classList.add('light-theme');
+            localStorage.setItem('theme', 'light');
+            showToast('Switched to light mode', 'info');
+        } else {
+            document.body.classList.remove('light-theme');
+            localStorage.setItem('theme', 'dark');
+            showToast('Switched to dark mode', 'info');
+        }
+    });
+
+    // CSV Export Logic
+    const btnExportCsv = document.getElementById('btn-export-csv');
+    btnExportCsv.addEventListener('click', () => {
+        if (!bookData || !bookData.magazine_issues) {
+            showToast('No data to export', 'error');
+            return;
+        }
+        
+        const filteredIssues = bookData.magazine_issues.filter(issue => {
+            const matchesCategory = currentFilter === 'all' || issue.category === currentFilter;
+            const matchesSearch = 
+                issue.magazine.toLowerCase().includes(searchQuery) ||
+                issue.photographer.toLowerCase().includes(searchQuery) ||
+                issue.date.toLowerCase().includes(searchQuery) ||
+                issue.cover_star.toLowerCase().includes(searchQuery) ||
+                issue.significance.toLowerCase().includes(searchQuery);
+            return matchesCategory && matchesSearch;
+        });
+
+        if (filteredIssues.length === 0) {
+            showToast('No filtered issues to export', 'error');
+            return;
+        }
+
+        const headers = ['ID', 'Magazine', 'Date', 'Photographer', 'Cover Star', 'Category', 'Significance', 'Commentary'];
+        const csvRows = [headers.join(',')];
+
+        filteredIssues.forEach(issue => {
+            const values = [
+                issue.id,
+                issue.magazine,
+                issue.date,
+                issue.photographer,
+                issue.cover_star,
+                issue.category,
+                issue.significance,
+                issue.commentary
+            ].map(val => {
+                const escaped = ('' + val).replace(/"/g, '""');
+                return `"${escaped}"`;
+            });
+            csvRows.push(values.join(','));
+        });
+
+        // Use encodeURIComponent to support special characters and quotes correctly
+        const csvContent = "data:text/csv;charset=utf-8,\uFEFF" + csvRows.map(row => encodeURIComponent(row)).join("%0A");
+        const link = document.createElement("a");
+        link.setAttribute("href", csvContent);
+        link.setAttribute("download", `issues_export_${currentFilter}_${Date.now()}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        showToast(`Exported ${filteredIssues.length} issues to CSV!`, 'success');
+    });
 });

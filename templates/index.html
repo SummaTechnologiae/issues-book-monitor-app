@@ -27,6 +27,14 @@
                 <h1 id="main-title">Issues by Vince Aletti</h1>
             </div>
             <div class="action-area">
+                <div class="theme-toggle-wrapper">
+                    <span class="theme-icon"><i class="fa-solid fa-moon"></i></span>
+                    <label class="switch" aria-label="Toggle theme">
+                        <input type="checkbox" id="theme-toggle">
+                        <span class="slider round"></span>
+                    </label>
+                    <span class="theme-icon"><i class="fa-solid fa-sun"></i></span>
+                </div>
                 <span class="source-indicator" id="data-source">Loading source...</span>
                 <button id="btn-refresh" class="btn btn-primary" aria-label="Refresh book details">
                     <span class="btn-text">Refresh Details</span>
@@ -119,9 +127,14 @@
                 <!-- Tab Content: Issues List -->
                 <div class="tab-pane active" id="issues-content" role="tabpanel">
                     <div class="filter-bar">
-                        <div class="search-box">
-                            <i class="fa-solid fa-magnifying-glass"></i>
-                            <input type="text" id="issues-search" placeholder="Search by magazine, photographer, cover star...">
+                        <div class="filter-controls-row">
+                            <div class="search-box">
+                                <i class="fa-solid fa-magnifying-glass"></i>
+                                <input type="text" id="issues-search" placeholder="Search by magazine, photographer, cover star...">
+                            </div>
+                            <button id="btn-export-csv" class="btn btn-secondary" title="Export issues to CSV">
+                                <i class="fa-solid fa-file-csv"></i> Export CSV
+                            </button>
                         </div>
                         <div class="category-filters" id="category-filters-container">
                             <button class="filter-tag active" data-filter="all">All</button>
