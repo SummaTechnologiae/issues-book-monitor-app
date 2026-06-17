@@ -37,7 +37,7 @@ BOOK_FALLBACK_DATA = {
     "stock_status": "In Stock. Ships from and sold by Amazon.com.",
     "rating": "4.7 out of 5 stars",
     "reviews_count": 87,
-    "cover_image_url": "https://images-na.ssl-images-amazon.com/images/I/81dG2tI36WL._AC_UL600_SR600,600_.jpg", # High-quality cover image
+    "cover_image_url": "/static/images/book_cover.jpg", # High-quality cover image
     "amazon_store_url": "https://www.amazon.com/amz-books/store",
     "amazon_product_url": "https://www.amazon.com/dp/0714876789",
     "description": (
