@@ -611,15 +611,15 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!response.ok) {
                 let errorMsg = 'Subscription failed.';
                 try {
-                    const errorJson = await response.json();
-                    errorMsg = errorJson.message || errorMsg;
-                } catch (e) {
+                    const errorText = await response.text();
                     try {
-                        const errorText = await response.text();
+                        const errorJson = JSON.parse(errorText);
+                        errorMsg = errorJson.message || errorMsg;
+                    } catch (jsonErr) {
                         errorMsg = errorText.slice(0, 100) || errorMsg;
-                    } catch (textErr) {
-                        errorMsg = response.statusText || errorMsg;
                     }
+                } catch (e) {
+                    errorMsg = response.statusText || errorMsg;
                 }
                 throw new Error(errorMsg);
             }
